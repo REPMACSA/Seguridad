@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Seguridad — Admin</title>
+<style>
+  :root { --navy:#1C2B4A; --gold:#C9A24B; --border:#e2e8f0; --text:#1e293b; --muted:#64748b; --light:#F1F5F9; }
+  * { box-sizing:border-box; }
+  body { font-family:'Segoe UI', Arial, sans-serif; margin:0; padding:0; background:#f1f5f9; color:var(--text); }
+  .topbar { background:var(--navy); color:#fff; padding:14px 18px; padding-top:calc(14px + env(safe-area-inset-top,0px)); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; }
+  .topbar h1 { font-size:16px; margin:0; }
+  .topbar-right { display:flex; align-items:center; gap:8px; }
+  .topbar a, .topbar button { background:transparent; border:1.5px solid rgba(255,255,255,.5); color:#fff; border-radius:20px; padding:6px 13px; font-size:.75rem; font-weight:700; cursor:pointer; text-decoration:none; }
+  .container { max-width:760px; margin:0 auto; padding:16px 14px 60px; }
+  .card { background:#fff; border-radius:14px; padding:18px; box-shadow:0 4px 14px rgba(30,27,75,0.06); border:1px solid var(--border); margin-bottom:14px; }
+  .card h3 { margin-top:0; color:var(--navy); }
+  label { display:block; font-size:13px; font-weight:600; margin-top:12px; margin-bottom:5px; }
+  select, input, textarea { width:100%; padding:9px; border:1.5px solid var(--border); border-radius:8px; font-size:14px; font-family:inherit; }
+  button.guardar { background:var(--navy); color:#fff; border:none; padding:11px 18px; border-radius:9px; font-weight:700; margin-top:12px; cursor:pointer; width:100%; font-size:14px; }
+  button.guardar:disabled { background:#94a3b8; cursor:not-allowed; }
+  .sin-acceso-box { max-width:420px; margin:80px auto; text-align:center; }
+  .dias-banner { background:linear-gradient(135deg,#0f766e,#14532d); color:#fff; border-radius:14px; padding:18px; margin-bottom:14px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap; }
+  .dias-banner .num { font-size:38px; font-weight:800; line-height:1; }
+  .dias-banner .lbl { font-size:12.5px; opacity:.9; margin-top:4px; }
+  .dias-banner button { background:#fff; color:#991b1b; border:none; padding:10px 16px; border-radius:9px; font-weight:700; font-size:12.5px; cursor:pointer; }
+  .tabs-top { display:flex; gap:8px; margin-bottom:14px; }
+  .tabs-top button { flex:1; background:#e2e8f0; color:#1f2937; border:none; padding:11px; border-radius:9px; font-weight:700; font-size:13.5px; cursor:pointer; }
+  .tabs-top button.active { background:var(--navy); color:#fff; }
+  .cajas-resumen { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:14px; }
+  .caja { flex:1; min-width:90px; background:#f8fafc; border:1.5px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center; cursor:pointer; }
+  .caja .num { font-size:20px; font-weight:800; }
+  .caja .lbl { font-size:10px; color:var(--muted); margin-top:2px; }
+  .item { border-left:5px solid #94a3b8; background:#fff; border-radius:8px; padding:12px 14px; margin-bottom:10px; box-shadow:0 1px 4px rgba(0,0,0,0.05); }
+  .item.incidente { border-left-color:#dc2626; }
+  .item.condicion { border-left-color:#d97706; }
+  .item.acto { border-left-color:#7c3aed; }
+  .item.epp { border-left-color:#0369a1; }
+  .item-mat { font-weight:700; font-size:14.5px; }
+  .item-id { font-size:10.5px; color:var(--muted); font-family:monospace; }
+  .item-tecnico { font-size:12px; color:var(--navy); font-weight:600; margin-top:2px; }
+  .badge { display:inline-block; padding:3px 9px; border-radius:12px; font-size:11px; font-weight:700; color:#fff; margin-top:6px; margin-right:5px; }
+  .item-det { font-size:12.5px; color:var(--muted); margin-top:4px; }
+  .accion-box { margin-top:10px; padding-top:10px; border-top:1px dashed var(--border); display:flex; gap:8px; flex-wrap:wrap; }
+  .accion-box button { width:auto; margin-top:0; padding:9px 14px; font-size:13px; }
+  .btn-ok { background:#16a34a; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+  .btn-info { background:#0ea5e9; color:#fff; border:none; border-radius:8px; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>🦺 Seguridad — Admin</h1>
+  <div class="topbar-right">
+    <a href="https://repmacsa.github.io/Portal/">🏠 Portal</a>
+    <span id="usuarioPortalTxt" style="font-size:.78rem;"></span>
+    <button onclick="salirPortal()">🔒 Salir</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div id="sinAccesoBox" class="sin-acceso-box" style="display:none;">
+    <p style="color:#dc2626;font-weight:600;">🔒 No hay una sesión activa del Portal, o tu perfil no tiene acceso a este panel.</p>
+    <p style="font-size:13px;color:#64748b;">Entrá desde el Portal con un usuario de administración.</p>
+    <a href="https://repmacsa.github.io/Portal/" style="display:inline-block;margin-top:8px;background:var(--navy);color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:600;">🏠 Ir al Portal</a>
+  </div>
+
+  <div id="appBox" style="display:none;">
+
+    <div class="dias-banner">
+      <div>
+        <div class="num" id="diasNum">—</div>
+        <div class="lbl">días sin accidentes</div>
+      </div>
+      <button onclick="registrarAccidente()">⚠️ Registrar accidente hoy</button>
+    </div>
+
+    <div class="tabs-top">
+      <button id="tabReportes" class="active" onclick="mostrarSeccion('reportes')">📋 Reportes</button>
+      <button id="tabEPP" onclick="mostrarSeccion('epp')">🦺 EPP</button>
+    </div>
+
+    <div id="seccionReportes">
+      <div class="card">
+        <div class="cajas-resumen" id="cajasResumenReportes"></div>
+        <label>Filtrar por estado</label>
+        <select id="filtroEstadoReportes" onchange="cargarListaReportes()">
+          <option value="Todos">Todos</option>
+          <option value="Reportado">Reportado</option>
+          <option value="En revisión">En revisión</option>
+          <option value="Cerrado">Cerrado</option>
+        </select>
+        <div id="listaReportes" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+    <div id="seccionEPP" style="display:none;">
+      <div class="card">
+        <div class="cajas-resumen" id="cajasResumenEPP"></div>
+        <label>Filtrar por estado</label>
+        <select id="filtroEstadoEPP" onchange="cargarListaEPP()">
+          <option value="Todos">Todos</option>
+          <option value="Solicitado">Solicitado</option>
+          <option value="Entregado">Entregado</option>
+        </select>
+        <div id="listaEPP" style="margin-top:14px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+let SCRIPT_URL = localStorage.getItem('seguridad_scriptUrl') || 'PEGAR_AQUI_LA_URL_DEL_WEB_APP';
+
+const ACCIONES_LECTURA_SEG = ['listarTodosReportes', 'listarTodasSolicitudesEPP', 'getDiasSinAccidentes', 'getHistorial'];
+let escrituraSegEnCurso = false;
+
+function mostrarGuardandoSeg_(mostrar) {
+  let el = document.getElementById('guardandoSegOverlay');
+  if (mostrar) {
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'guardandoSegOverlay';
+      el.style.cssText = 'position:fixed;top:14px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:9px 20px;border-radius:8px;font-size:12.5px;font-weight:700;z-index:9999;box-shadow:0 4px 14px rgba(0,0,0,.3);';
+      el.textContent = '⏳ Guardando...';
+      document.body.appendChild(el);
+    }
+  } else if (el) el.remove();
+}
+
+function api(action, data) {
+  const esEscritura = ACCIONES_LECTURA_SEG.indexOf(action) === -1;
+  if (esEscritura) {
+    if (escrituraSegEnCurso) {
+      return Promise.reject(new Error('Ya hay una acción guardándose — esperá un momento antes de repetirlo.'));
+    }
+    escrituraSegEnCurso = true;
+    mostrarGuardandoSeg_(true);
+  }
+  return new Promise((resolve, reject) => {
+    const cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1000000);
+    const limpiar = function() {
+      delete window[cbName];
+      script.remove();
+      if (esEscritura) { escrituraSegEnCurso = false; mostrarGuardandoSeg_(false); }
+    };
+    window[cbName] = function(payload) {
+      limpiar();
+      if (payload && payload.ok) resolve(payload);
+      else reject(new Error((payload && payload.msg) || 'Error desconocido'));
+    };
+    const url = SCRIPT_URL + '?action=' + encodeURIComponent(action) + '&data=' + encodeURIComponent(JSON.stringify(data || {})) + '&callback=' + cbName;
+    const script = document.createElement('script');
+    script.src = url;
+    script.onerror = function() { limpiar(); reject(new Error('No se pudo conectar')); };
+    document.body.appendChild(script);
+  });
+}
+
+// ══ SESIÓN DEL PORTAL ══
+let usuarioPortal = null;
+const ROLES_PERMITIDOS = ['superadmin', 'administrativo'];
+const SESION_TIMEOUT_MS = 5 * 60 * 1000;
+let sesionLockTimer = null;
+
+function leerSesionPortal_() {
+  try {
+    const raw = localStorage.getItem('portal_sesion');
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    const horas = (Date.now() - s.ts) / (1000 * 60 * 60);
+    if (horas > 10) { localStorage.removeItem('portal_sesion'); return null; }
+    return s;
+  } catch(e) { return null; }
+}
+function reiniciarTimerSesion_(){
+  clearTimeout(sesionLockTimer);
+  sesionLockTimer = setTimeout(salirPortal, SESION_TIMEOUT_MS);
+}
+function activarVigilanciaSesion_(){
+  reiniciarTimerSesion_();
+  ['click','touchstart','keydown','scroll'].forEach(ev =>
+    document.addEventListener(ev, reiniciarTimerSesion_, { passive: true })
+  );
+}
+window.addEventListener('pageshow', function(event){
+  if (event.persisted) window.location.reload();
+});
+function salirPortal() {
+  clearTimeout(sesionLockTimer);
+  localStorage.removeItem('portal_sesion');
+  window.location.href = 'https://repmacsa.github.io/Portal/';
+}
+
+function intentarEntrarConPortal() {
+  const sesion = leerSesionPortal_();
+  if (sesion && ROLES_PERMITIDOS.indexOf(sesion.rol) !== -1) {
+    usuarioPortal = { nombre: sesion.nombre, rol: sesion.rol };
+    document.getElementById('sinAccesoBox').style.display = 'none';
+    document.getElementById('appBox').style.display = 'block';
+    document.getElementById('usuarioPortalTxt').textContent = '👋 ' + sesion.nombre;
+    activarVigilanciaSesion_();
+    cargarDiasSinAccidentes();
+    cargarListaReportes();
+  } else {
+    document.getElementById('sinAccesoBox').style.display = 'block';
+  }
+}
+
+async function cargarDiasSinAccidentes() {
+  try {
+    const res = await api('getDiasSinAccidentes', {});
+    document.getElementById('diasNum').textContent = (res.dias !== null && res.dias !== undefined) ? res.dias : '—';
+  } catch (e) { console.warn('No se pudo cargar días sin accidentes', e); }
+}
+
+async function registrarAccidente() {
+  if (!confirm('¿Confirmás que hoy hubo un accidente? Esto reinicia el contador a 0.')) return;
+  try {
+    await api('registrarAccidenteHoy', { quien: usuarioPortal.nombre });
+    await cargarDiasSinAccidentes();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+// ══ NAVEGACIÓN ══
+function mostrarSeccion(sec) {
+  document.getElementById('seccionReportes').style.display = sec === 'reportes' ? 'block' : 'none';
+  document.getElementById('seccionEPP').style.display = sec === 'epp' ? 'block' : 'none';
+  document.getElementById('tabReportes').className = sec === 'reportes' ? 'active' : '';
+  document.getElementById('tabEPP').className = sec === 'epp' ? 'active' : '';
+  if (sec === 'epp') cargarListaEPP();
+}
+
+// ══ REPORTES ══
+const ESTADOS_RESUMEN_REPORTES = ['Reportado', 'En revisión', 'Cerrado'];
+const COLOR_ESTADO_REPORTE = { 'Reportado': '#94a3b8', 'En revisión': '#0ea5e9', 'Cerrado': '#16a34a' };
+const LABEL_TIPO = { 'Incidente': '🚑 Incidente', 'Condicion_Insegura': '⚠️ Condición insegura', 'Acto_Inseguro': '🙅 Acto inseguro' };
+const CLASE_TIPO = { 'Incidente': 'incidente', 'Condicion_Insegura': 'condicion', 'Acto_Inseguro': 'acto' };
+
+async function cargarResumenReportes() {
+  try {
+    const res = await api('listarTodosReportes', {});
+    const reportes = res.reportes || [];
+    const cont = document.getElementById('cajasResumenReportes');
+    cont.innerHTML = ESTADOS_RESUMEN_REPORTES.map(function(estado) {
+      const cant = reportes.filter(r => r.Estado === estado).length;
+      const color = COLOR_ESTADO_REPORTE[estado] || '#64748b';
+      return '<div class="caja" onclick="filtrarReportesPorEstado(\'' + estado + '\')">' +
+        '<div class="num" style="color:' + color + ';">' + cant + '</div>' +
+        '<div class="lbl">' + estado + '</div></div>';
+    }).join('');
+  } catch (e) { console.warn('No se pudo cargar el resumen', e); }
+}
+
+function filtrarReportesPorEstado(estado) {
+  document.getElementById('filtroEstadoReportes').value = estado;
+  cargarListaReportes();
+}
+
+async function cargarListaReportes() {
+  const filtro = document.getElementById('filtroEstadoReportes').value;
+  const cont = document.getElementById('listaReportes');
+  cont.innerHTML = 'Cargando...';
+  cargarResumenReportes();
+  try {
+    const res = await api('listarTodosReportes', { filtro });
+    const reportes = res.reportes || [];
+    if (!reportes.length) { cont.innerHTML = '<p>No hay reportes con ese filtro.</p>'; return; }
+    cont.innerHTML = reportes.map(renderReporte).join('');
+  } catch (e) {
+    cont.innerHTML = '<p style="color:#dc2626;">Error: ' + e.message + '</p>';
+  }
+}
+
+function renderReporte(r) {
+  const color = COLOR_ESTADO_REPORTE[r.Estado] || '#64748b';
+  let accion = '';
+  if (r.Estado === 'Reportado') {
+    accion = '<div class="accion-box">' +
+      '<button class="btn-info" onclick="marcarEnRevision(\'' + r.ID + '\')">👀 Marcar en revisión</button>' +
+      '<button class="btn-ok" onclick="cerrarReportePrompt(\'' + r.ID + '\')">✅ Cerrar con acción tomada</button>' +
+      '</div>';
+  } else if (r.Estado === 'En revisión') {
+    accion = '<div class="accion-box"><button class="btn-ok" onclick="cerrarReportePrompt(\'' + r.ID + '\')">✅ Cerrar con acción tomada</button></div>';
+  }
+  return '<div class="item ' + CLASE_TIPO[r.Tipo] + '">' +
+    '<span class="badge" style="background:#475569;">' + LABEL_TIPO[r.Tipo] + '</span>' +
+    '<div class="item-mat">' + r.Descripcion + '</div>' +
+    '<div class="item-id">' + r.ID + ' · ' + r.Fecha_Reporte + '</div>' +
+    '<div class="item-tecnico">👤 ' + r.Tecnico + '</div>' +
+    (r.Ubicacion ? '<div class="item-det">📍 ' + r.Ubicacion + '</div>' : '') +
+    '<span class="badge" style="background:' + color + '">' + r.Estado + '</span>' +
+    (r.Accion_Tomada ? '<div class="item-det" style="margin-top:6px;color:#166534;">✅ ' + r.Accion_Tomada + '</div>' : '') +
+    accion +
+    '</div>';
+}
+
+async function marcarEnRevision(id) {
+  try { await api('marcarEnRevision', { id, quien: usuarioPortal.nombre }); await cargarListaReportes(); }
+  catch (e) { alert('Error: ' + e.message); }
+}
+async function cerrarReportePrompt(id) {
+  const accionTomada = prompt('¿Qué acción se tomó?');
+  if (accionTomada === null) return;
+  if (!accionTomada.trim()) { alert('Indicá qué se hizo.'); return; }
+  try { await api('cerrarReporte', { id, quien: usuarioPortal.nombre, accionTomada }); await cargarListaReportes(); }
+  catch (e) { alert('Error: ' + e.message); }
+}
+
+// ══ EPP ══
+const ESTADOS_RESUMEN_EPP = ['Solicitado', 'Entregado'];
+const COLOR_ESTADO_EPP = { 'Solicitado': '#94a3b8', 'Entregado': '#16a34a' };
+
+async function cargarResumenEPP() {
+  try {
+    const res = await api('listarTodasSolicitudesEPP', {});
+    const solicitudes = res.solicitudes || [];
+    const cont = document.getElementById('cajasResumenEPP');
+    cont.innerHTML = ESTADOS_RESUMEN_EPP.map(function(estado) {
+      const cant = solicitudes.filter(s => s.Estado === estado).length;
+      const color = COLOR_ESTADO_EPP[estado] || '#64748b';
+      return '<div class="caja" onclick="filtrarEPPPorEstado(\'' + estado + '\')">' +
+        '<div class="num" style="color:' + color + ';">' + cant + '</div>' +
+        '<div class="lbl">' + estado + '</div></div>';
+    }).join('');
+  } catch (e) { console.warn('No se pudo cargar el resumen', e); }
+}
+
+function filtrarEPPPorEstado(estado) {
+  document.getElementById('filtroEstadoEPP').value = estado;
+  cargarListaEPP();
+}
+
+async function cargarListaEPP() {
+  const filtro = document.getElementById('filtroEstadoEPP').value;
+  const cont = document.getElementById('listaEPP');
+  cont.innerHTML = 'Cargando...';
+  cargarResumenEPP();
+  try {
+    const res = await api('listarTodasSolicitudesEPP', { filtro });
+    const solicitudes = res.solicitudes || [];
+    if (!solicitudes.length) { cont.innerHTML = '<p>No hay solicitudes con ese filtro.</p>'; return; }
+    cont.innerHTML = solicitudes.map(renderEPP).join('');
+  } catch (e) {
+    cont.innerHTML = '<p style="color:#dc2626;">Error: ' + e.message + '</p>';
+  }
+}
+
+function renderEPP(s) {
+  const color = COLOR_ESTADO_EPP[s.Estado] || '#64748b';
+  let accion = '';
+  if (s.Estado === 'Solicitado') {
+    accion = '<div class="accion-box"><button class="btn-ok" onclick="marcarEntregadoEPP(\'' + s.ID + '\')">✅ Marcar entregado</button></div>';
+  }
+  return '<div class="item epp">' +
+    '<div class="item-mat">' + s.Elemento + (s.Talle ? ' — talle ' + s.Talle : '') + '</div>' +
+    '<div class="item-id">' + s.ID + ' · ' + s.Fecha_Solicitud + '</div>' +
+    '<div class="item-tecnico">👤 ' + s.Tecnico + '</div>' +
+    (s.Motivo ? '<div class="item-det">Motivo: ' + s.Motivo + '</div>' : '') +
+    '<span class="badge" style="background:' + color + '">' + s.Estado + '</span>' +
+    accion +
+    '</div>';
+}
+
+async function marcarEntregadoEPP(id) {
+  try { await api('marcarEntregadoEPP', { id, quien: usuarioPortal.nombre }); await cargarListaEPP(); }
+  catch (e) { alert('Error: ' + e.message); }
+}
+
+intentarEntrarConPortal();
+</script>
+</body>
+</html>
